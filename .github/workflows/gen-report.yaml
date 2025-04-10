@@ -1,0 +1,37 @@
+name: Convert Markdown to PDF
+on:
+  push:
+    paths:
+      - "report/report.md"
+    branches:
+      - main
+      - final-report
+  workflow_dispatch:
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pandoc and LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-xetex fonts-dejavu
+
+      - name: Convert Markdown to PDF
+        run: |
+          pandoc report/report.md \
+                -f markdown \
+                -t pdf \
+                --pdf-engine=xelatex \
+                -V monofont="DejaVu Sans Mono" \
+                -o report/report.pdf
+
+      - name: Commit PDFs
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add report/report.pdf
+          git commit -m "Convert Markdown to PDF" -a || echo "No changes to commit"
+          git push
